@@ -1,0 +1,7 @@
+﻿  Client.cpp
+  .NETFramework,Version=v4.7.2.AssemblyAttributes.cpp
+  Generating Code...
+  Client.obj : MSIL module encountered; incremental linking is disabled for MSIL; performing full link
+  TestClient1.vcxproj -> C:\Users\Asus Vivobook\source\repos\TestClient1\x64\Debug\TestClient1.exe
+  'pwsh.exe' is not recognized as an internal or external command,
+  operable program or batch file.

@@ -1,0 +1,8 @@
+﻿  MyForm.cpp
+  .NETFramework,Version=v4.7.2.AssemblyAttributes.cpp
+  Generating Code...
+C:\Users\Asus Vivobook\Downloads\Login_Form\MyForm.cpp(11,5): error C2653: 'Login_Form': is not a class or namespace name
+C:\Users\Asus Vivobook\Downloads\Login_Form\MyForm.cpp(11,17): error C2065: 'MyForm': undeclared identifier
+C:\Users\Asus Vivobook\Downloads\Login_Form\MyForm.cpp(11,24): error C2146: syntax error: missing ';' before identifier 'form'
+C:\Users\Asus Vivobook\Downloads\Login_Form\MyForm.cpp(11,24): error C2065: 'form': undeclared identifier
+C:\Users\Asus Vivobook\Downloads\Login_Form\MyForm.cpp(12,24): error C2065: 'form': undeclared identifier
