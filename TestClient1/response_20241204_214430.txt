@@ -1,0 +1,54 @@
+
+Image Name                     PID Session Name        Session#    Mem Usage
+========================= ======== ================ =========== ============
+System Idle Process              0 Services                   0          8 K
+System                           4 Services                   0      3,280 K
+Registry                       176 Services                   0     59,352 K
+smss.exe                       688 Services                   0        620 K
+csrss.exe                      584 Services                   0      2,980 K
+wininit.exe                    968 Services                   0      3,740 K
+services.exe                  1036 Services                   0      9,160 K
+lsass.exe                     1044 Services                   0     26,204 K
+svchost.exe                   1184 Services                   0     25,780 K
+fontdrvhost.exe               1216 Services                   0        248 K
+WUDFHost.exe                  1224 Services                   0     12,472 K
+svchost.exe                   1312 Services                   0     16,380 K
+svchost.exe                   1364 Services                   0      7,228 K
+WUDFHost.exe                  1412 Services                   0      4,552 K
+svchost.exe                   1664 Services                   0      3,080 K
+svchost.exe                   1672 Services                   0      6,388 K
+svchost.exe                   1680 Services                   0     10,136 K
+svchost.exe                   1820 Services                   0      7,200 K
+svchost.exe                   1832 Services                   0      5,556 K
+svchost.exe                   1880 Services                   0      7,104 K
+IntelCpHDCPSvc.exe            1936 Services                   0      1,748 K
+svchost.exe                   1952 Services                   0      5,040 K
+svchost.exe                   1976 Services                   0     14,484 K
+svchost.exe                   2028 Services                   0      6,144 K
+svchost.exe                   1124 Services                   0      4,360 K
+svchost.exe                   2056 Services                   0      5,144 K
+IntelCpHeciSvc.exe            2080 Services                   0      2,196 K
+svchost.exe                   2172 Services                   0     13,872 K
+svchost.exe                   2500 Services                   0      3,540 K
+svchost.exe                   2520 Services                   0      5,448 K
+svchost.exe                   2548 Services                   0     17,836 K
+svchost.exe                   2652 Services                   0      5,312 K
+svchost.exe                   2668 Services                   0      1,744 K
+svchost.exe                   2676 Services                   0      7,764 K
+svchost.exe                   2772 Services                   0      4,788 K
+dasHost.exe                   2864 Services                   0      1,120 K
+svchost.exe                   2924 Services                   0      6,304 K
+Memory Compression            2984 Services                   0    161,508 K
+svchost.exe                   3056 Services                   0      9,900 K
+igfxCUIService.exe            2200 Services                   0      4,568 K
+svchost.exe                   3104 Services                   0      4,112 K
+svchost.exe                   3112 Services                   0      4,260 K
+svchost.exe                   3264 Services                   0      2,452 K
+svchost.exe                   3276 Services                   0     10,616 K
+svchost.exe                   3384 Services                   0      3,628 K
+svchost.exe                   3448 Services                   0      3,988 K
+svchost.exe                   3456 Services                   0      4,492 K
+svchost.exe                   3544 Services                   0      4,436 K
+svchost.exe                   3572 Services                   0     30,276 K
+svchost.exe                   3624 Services                   0      6,136 K
+svchost.exe                   3736 Ser

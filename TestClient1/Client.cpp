@@ -218,11 +218,20 @@ static void handleResponse(String^ command, NetworkStream^ stream, String^ recip
 
         if (bytesRead > 0)
         {
+            // Chuyển dữ liệu nhận được sang chuỗi
             String^ response = Encoding::UTF8->GetString(buffer, 0, bytesRead);
             Console::WriteLine("Response from server:\r\n{0}", response);
+
+            // Lưu dữ liệu nhận được vào file txt
+            String^ filePath = "response_" + DateTime::Now.ToString("yyyyMMdd_HHmmss") + ".txt";
+            File::WriteAllText(filePath, response);
+
+            // Gửi file txt qua email
             String^ subject = "Response from Server";
-            String^ body = "Here is the list of running apps/services";
-            SendEmail(recipientEmail, subject, body, response);
+            String^ body = "Here is the response from the server saved in a text file.";
+            SendEmail(recipientEmail, subject, body, filePath);
+
+            Console::WriteLine("Response saved to file and sent via email.");
         }
         else
         {
@@ -279,62 +288,60 @@ int main(array<System::String^>^ args)
                             MailInfo^ mailInfo = infos[i];
                             String^ messageId = mailInfo->UIDL;  // Sử dụng UIDL để phân biệt email
 
-                            // Kiểm tra xem email đã được xử lý chưa
-                            if (!IsEmailProcessed(messageId, processedEmailsFile))
+                            if (IsEmailProcessed(messageId, processedEmailsFile))
                             {
-                                try
-                                {
-                                    // Lấy nội dung email
-                                    EAGetMail::Mail^ oMail = oClient->GetMail(mailInfo);
+                                Console::WriteLine("Email already processed. Skipping...");
+                                continue; // Bỏ qua email này
+                            }
 
-                                    // Kiểm tra thời gian gửi email
-                                   
+                            // Lấy nội dung email
+                            EAGetMail::Mail^ oMail = oClient->GetMail(mailInfo);
 
-                                    // Kiểm tra người gửi có khớp với địa chỉ cụ thể không (nếu cần thiết)
-                                    if (specificSender->Length == 0 || IsEmailFromSpecificSender(oMail, specificSender))
-                                    {
-                                        Console::WriteLine("From: {0}", oMail->From->ToString());
-                                        Console::WriteLine("Subject: {0}\r\n", oMail->Subject);
-                                        Console::WriteLine("Body: {0}\r\n", oMail->TextBody); // In ra nội dung email
+                            // Kiểm tra thời gian gửi email
+                            DateTime sentTime = oMail->ReceivedDate;
 
-                                        // Gửi lệnh từ nội dung email đến server điều khiển (giả sử qua socket)
-                                        // Gửi lệnh từ nội dung email đến server điều khiển (giả sử qua socket)
-                                        String^ command = oMail->TextBody->Trim();
+                            // Nếu email được gửi trước thời gian ứng dụng chạy, thoát khỏi vòng lặp
+                            if (sentTime < startTime)
+                            {
+                                Console::WriteLine("Found an email sent before application started. Stopping...");
+                                break;
+                            }
 
-                                        // Thực thi lệnh qua socket (giả sử đang kết nối với server qua socket)
-                                        TcpClient^ client = gcnew TcpClient("127.0.0.1", 12345); // Địa chỉ IP server
-                                        NetworkStream^ stream = client->GetStream();
+                            Console::WriteLine("Processing email sent at: {0}", sentTime);
 
-                                        // Gửi lệnh đến server
-                                        array<Byte>^ data = Encoding::UTF8->GetBytes(command);
-                                        stream->Write(data, 0, data->Length);
-                                        stream->Flush(); // Đảm bảo dữ liệu đã được gửi đi
-                                        handleResponse(command, stream, specificSender);
-                                        
+                            // Kiểm tra người gửi có khớp với địa chỉ cụ thể không (nếu cần thiết)
+                            if (specificSender->Length == 0 || IsEmailFromSpecificSender(oMail, specificSender))
+                            {
+                                Console::WriteLine("From: {0}", oMail->From->ToString());
+                                Console::WriteLine("Subject: {0}\r\n", oMail->Subject);
+                                Console::WriteLine("Body: {0}\r\n", oMail->TextBody); // In ra nội dung email
 
-                                        // Đóng kết nối
-                                        stream->Close();
-                                        client->Close();
+                                // Gửi lệnh từ nội dung email đến server điều khiển
+                                String^ command = oMail->TextBody->Trim();
 
-                                        // Đánh dấu email đã đọc nếu cần thiết
-                                        oClient->MarkAsRead(mailInfo, true);
+                                // Thực thi lệnh qua socket
+                                TcpClient^ client = gcnew TcpClient("127.0.0.1", 12345); // Địa chỉ IP server
+                                NetworkStream^ stream = client->GetStream();
 
-                                        // Lưu lại email đã xử lý
-                                        SaveProcessedEmail(messageId, processedEmailsFile);
-                                    }
-                                    else
-                                    {
-                                        Console::WriteLine("Email is not from the specified sender: {0}\r\n", oMail->From->ToString());
-                                    }
-                                }
-                                catch (Exception^ e)
-                                {
-                                    Console::WriteLine("Failed to process email {0}: {1}", mailInfo->Index, e->Message);
-                                }
+                                // Gửi lệnh đến server
+                                array<Byte>^ data = Encoding::UTF8->GetBytes(command);
+                                stream->Write(data, 0, data->Length);
+                                stream->Flush(); // Đảm bảo dữ liệu đã được gửi đi
+                                handleResponse(command, stream, specificSender);
+
+                                // Đóng kết nối
+                                stream->Close();
+                                client->Close();
+
+                                // Đánh dấu email đã đọc nếu cần thiết
+                                oClient->MarkAsRead(mailInfo, true);
+
+                                // Lưu lại email đã xử lý
+                                SaveProcessedEmail(messageId, processedEmailsFile);
                             }
                             else
                             {
-                                Console::WriteLine("Email already processed: {0}\r\n", messageId);
+                                Console::WriteLine("Email is not from the specified sender: {0}\r\n", oMail->From->ToString());
                             }
                         }
                     }
@@ -357,7 +364,7 @@ int main(array<System::String^>^ args)
             }
 
             // Sleep for 60 seconds before checking again
-            // Thread::Sleep(60000);  // 60 seconds
+            Thread::Sleep(60000);  // 60 seconds
         }
     }
     catch (Exception^ ep)

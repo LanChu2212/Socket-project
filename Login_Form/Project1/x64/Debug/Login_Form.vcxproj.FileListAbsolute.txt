@@ -1,6 +1,0 @@
-C:\Users\Asus Vivobook\Downloads\Login_Form\Project1\x64\Debug\Login_Form.vcxproj.AssemblyReference.cache
-C:\Users\Asus Vivobook\Downloads\Login_Form\Project1\x64\Debug\LoginForm.MyForm.resources
-C:\Users\Asus Vivobook\Downloads\Login_Form\Project1\x64\Debug\Login_Form.vcxproj.GenerateResource.cache
-C:\Users\Asus Vivobook\Downloads\Login_Form\Project1\x64\Debug\LoginForm.ServerForm.resources
-C:\Users\Asus Vivobook\Downloads\Login_Form\x64\Debug\EAGetMail.dll
-C:\Users\Asus Vivobook\Downloads\Login_Form\Project1\x64\Debug\Login_Fo.63109366.Up2Date

@@ -132,7 +132,7 @@ namespace LoginForm {
 
             form->UpdateCommunicationLog("Screenshot sent to client.");
         }
-        else if (action->Equals("GET_FILE", StringComparison::OrdinalIgnoreCase) && fileName != nullptr)
+        else if (action->Equals("GET_FILE",     StringComparison::OrdinalIgnoreCase) && fileName != nullptr)
         {
             if (System::IO::File::Exists(fileName))
             {
@@ -230,6 +230,7 @@ namespace LoginForm {
     {
 
         TcpListener^ listener = gcnew TcpListener(IPAddress::Parse("127.0.0.1"), 12345);
+        
         listener->Start();
 
         this->UpdateCommunicationLog("Server is waiting for commands...");
