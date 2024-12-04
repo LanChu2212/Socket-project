@@ -1,5 +1,4 @@
-﻿
-using namespace System;
+﻿using namespace System;
 using namespace System::Globalization;
 using namespace System::IO;
 using namespace System::Threading;
@@ -8,7 +7,7 @@ using namespace System::Net::Mail;
 using namespace System::Net::Sockets;
 using namespace System::Text;
 using namespace EAGetMail; // Thư viện EAGetMail cho email
-
+#include<iostream>
 // Hàm tạo tên file tạm thời (có thể không cần trong trường hợp này nếu bạn không lưu file)
 static String^ GenerateFileName(int sequence)
 {
@@ -86,39 +85,74 @@ void SendEmail(String^ recipient, String^ subject, String^ body, String^ attachm
 {
     try
     {
+        // Kiểm tra thông tin người nhận
+        if (String::IsNullOrEmpty(recipient) || !System::Text::RegularExpressions::Regex::IsMatch(recipient, "^\\S+@\\S+\\.\\S+$"))
+        {
+            throw gcnew ArgumentException("Địa chỉ email không hợp lệ: " + recipient);
+        }
+
+        // Kiểm tra nội dung email
+        if (String::IsNullOrEmpty(subject))
+        {
+            subject = "No Subject";
+        }
+        if (String::IsNullOrEmpty(body))
+        {
+            body = "No Content";
+        }
+
         // Cấu hình thông tin email
         SmtpClient^ smtpClient = gcnew SmtpClient("smtp.gmail.com", 587);
-        smtpClient->Credentials = gcnew NetworkCredential("nguyenlamphuquykh@gmail.com", "benmaankriqyrnfy");
+        smtpClient->Credentials = gcnew NetworkCredential("huynhtrungkiet09032005@gmail.com", "ifztigzwrspjwhch");
         smtpClient->EnableSsl = true;
 
         // Tạo một đối tượng MailMessage
         MailMessage^ mailMessage = gcnew MailMessage();
-        System::Net::Mail::MailAddress^ mailAddress = gcnew System::Net::Mail::MailAddress("nguyenlamphuquykh@gmail.com");
+        System::Net::Mail::MailAddress^ mailAddress = gcnew System::Net::Mail::MailAddress("huynhtrungkiet09032005@gmail.com");
         mailMessage->From = mailAddress;
         mailMessage->To->Add(recipient);
         mailMessage->Subject = subject;
         mailMessage->Body = body;
 
-        // Nếu có tệp đính kèm
+        // Kiểm tra và thêm tệp đính kèm
         if (!String::IsNullOrEmpty(attachmentPath))
         {
-            mailMessage->Attachments->Add(gcnew System::Net::Mail::Attachment(attachmentPath));
+            if (System::IO::File::Exists(attachmentPath))
+            {
+                mailMessage->Attachments->Add(gcnew System::Net::Mail::Attachment(attachmentPath));
+            }
+            else
+            {
+                String^ tempFilePath = "response.txt";
+
+                // Tạo đối tượng StreamWriter để ghi vào tệp
+                StreamWriter^ writer = gcnew StreamWriter(tempFilePath);
+                writer->Write(attachmentPath);  // Ghi chuỗi vào tệp
+                writer->Close();         // Đóng tệp sau khi ghi
+
+                mailMessage->Attachments->Add(gcnew System::Net::Mail::Attachment(tempFilePath));
+
+                //mailMessage->Body += attachmentPath;
+            }
         }
 
         // Gửi email
+        //Console::WriteLine("Email content is " + attachmentPath);
         smtpClient->Send(mailMessage);
         Console::WriteLine("Email sent successfully to " + recipient);
     }
     catch (Exception^ ex)
     {
         Console::WriteLine("Error sending email: " + ex->Message);
+        Console::WriteLine("Stack Trace: " + ex->StackTrace);
     }
 }
 
 
+
 static void handleResponse(String^ command, NetworkStream^ stream, String^ recipientEmail) {
     if (command->Equals("TAKE_SCREENSHOT", StringComparison::OrdinalIgnoreCase))
-    {   
+    {
         Console::WriteLine(command);
         array<Byte>^ sizeBuffer = gcnew array<Byte>(4);
         int bytesRead = stream->Read(sizeBuffer, 0, sizeBuffer->Length);
@@ -135,7 +169,7 @@ static void handleResponse(String^ command, NetworkStream^ stream, String^ recip
             Console::WriteLine("Invalid image size received.");
             return;
         }
-        else{
+        else {
             Console::WriteLine(imageSize);
         }
 
@@ -213,7 +247,7 @@ static void handleResponse(String^ command, NetworkStream^ stream, String^ recip
         SendEmail(recipientEmail, subject, body, filePath);
     }
     else {
-        array<Byte>^ buffer = gcnew array<Byte>(4096); // Tạo bộ đệm để lưu dữ liệu nhận về
+        array<Byte>^ buffer = gcnew array<Byte>(65536); // Tạo bộ đệm để lưu dữ liệu nhận về
         int bytesRead = stream->Read(buffer, 0, buffer->Length); // Đọc dữ liệu từ server
 
         if (bytesRead > 0)
@@ -239,15 +273,15 @@ int main(array<System::String^>^ args)
         DateTime startTime = DateTime::Now;
 
         // Địa chỉ email của người gửi cụ thể cần lọc (có thể để trống nếu không cần lọc theo người gửi)
-        String^ specificSender = "nguyenlamphuquynt@gmail.com";
+        String^ specificSender = "notfound567404@gmail.com";
 
         // Thư mục tạm cho email đã xử lý
         String^ processedEmailsFile = Path::Combine(Directory::GetCurrentDirectory(), "processed_emails.txt");
 
         // Cấu hình máy chủ Gmail IMAP
         MailServer^ oServer = gcnew MailServer("imap.gmail.com",
-            "nguyenlamphuquykh@gmail.com",  // Địa chỉ email của bạn
-            "rnsbuhslquffkvmo",     // Mật khẩu ứng dụng
+            "huynhtrungkiet09032005@gmail.com",  // Địa chỉ email của bạn
+            "ifztigzwrspjwhch",     // Mật khẩu ứng dụng
             ServerProtocol::Imap4);  // Giao thức IMAP
 
         oServer->SSLConnection = true;  // Sử dụng kết nối SSL/TLS
@@ -263,6 +297,7 @@ int main(array<System::String^>^ args)
             try
             {
                 oClient->Connect(oServer);
+                Console::WriteLine("Connected to IMAP server");
                 array<Imap4Folder^>^ folders = oClient->GetFolders();
                 Imap4Folder^ inboxFolder = FindInboxFolder(folders);
 
@@ -288,7 +323,7 @@ int main(array<System::String^>^ args)
                                     EAGetMail::Mail^ oMail = oClient->GetMail(mailInfo);
 
                                     // Kiểm tra thời gian gửi email
-                                   
+
 
                                     // Kiểm tra người gửi có khớp với địa chỉ cụ thể không (nếu cần thiết)
                                     if (specificSender->Length == 0 || IsEmailFromSpecificSender(oMail, specificSender))
@@ -310,7 +345,7 @@ int main(array<System::String^>^ args)
                                         stream->Write(data, 0, data->Length);
                                         stream->Flush(); // Đảm bảo dữ liệu đã được gửi đi
                                         handleResponse(command, stream, specificSender);
-                                        
+
 
                                         // Đóng kết nối
                                         stream->Close();
@@ -324,7 +359,7 @@ int main(array<System::String^>^ args)
                                     }
                                     else
                                     {
-                                        Console::WriteLine("Email is not from the specified sender: {0}\r\n", oMail->From->ToString());
+                                        //Console::WriteLine("Email is not from the specified sender: {0}\r\n", oMail->From->ToString());
                                     }
                                 }
                                 catch (Exception^ e)
@@ -367,4 +402,3 @@ int main(array<System::String^>^ args)
 
     return 0;
 }
-
