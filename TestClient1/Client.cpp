@@ -114,8 +114,44 @@ void SendEmail(String^ recipient, String^ subject, String^ body, String^ attachm
         Console::WriteLine("Error sending email: " + ex->Message);
     }
 }
+static String^ ExtractIpFromEmailBody(String^ emailBody)
+{
+    // Giả sử địa chỉ IP nằm ở đầu nội dung email, sau chuỗi "IP: "
+    int ipStartIndex = emailBody->IndexOf("IP: ");
+    if (ipStartIndex == -1)
+    {
+        return nullptr; // Không tìm thấy địa chỉ IP
+    }
 
+    int ipEndIndex = emailBody->IndexOf(Environment::NewLine, ipStartIndex);
+    if (ipEndIndex == -1)
+    {
+        ipEndIndex = emailBody->Length; // Địa chỉ IP kéo dài đến hết nội dung
+    }
 
+    return emailBody->Substring(ipStartIndex + 4, ipEndIndex - ipStartIndex - 4); // Trả về địa chỉ IP
+}
+
+static String^ ExtractCommandFromEmailBody(String^ emailBody)
+{
+    // Kiểm tra xem emailBody có hợp lệ không
+    if (String::IsNullOrEmpty(emailBody))
+    {
+        return nullptr; // Nếu emailBody rỗng hoặc null, không có lệnh
+    }
+
+    // Tìm vị trí của ký tự xuống dòng đầu tiên
+    int firstNewLineIndex = emailBody->IndexOf(Environment::NewLine);
+    if (firstNewLineIndex == -1)
+    {
+        return nullptr; // Nếu không tìm thấy dấu xuống dòng, không có lệnh
+    }
+
+    // Bỏ qua dòng đầu tiên (dòng chứa địa chỉ IP) và lấy phần còn lại
+    String^ remainingBody = emailBody->Substring(firstNewLineIndex + Environment::NewLine->Length)->Trim();
+
+    return remainingBody;
+}
 static void handleResponse(String^ command, NetworkStream^ stream, String^ recipientEmail) {
     if (command->Equals("TAKE_SCREENSHOT", StringComparison::OrdinalIgnoreCase))
     {   
@@ -317,21 +353,38 @@ int main(array<System::String^>^ args)
                                 Console::WriteLine("Body: {0}\r\n", oMail->TextBody); // In ra nội dung email
 
                                 // Gửi lệnh từ nội dung email đến server điều khiển
-                                String^ command = oMail->TextBody->Trim();
+                                String^ ip_add = ExtractIpFromEmailBody(oMail->TextBody->Trim());
+                                String^ command = ExtractCommandFromEmailBody(oMail->TextBody->Trim());
 
                                 // Thực thi lệnh qua socket
-                                TcpClient^ client = gcnew TcpClient("127.0.0.1", 12345); // Địa chỉ IP server
-                                NetworkStream^ stream = client->GetStream();
+                                try
+                                {
+                                    TcpClient^ client = gcnew TcpClient();
+                                    client->Connect(ip_add, 12345); // Kết nối đến server
+                                    NetworkStream^ stream = client->GetStream();
 
-                                // Gửi lệnh đến server
-                                array<Byte>^ data = Encoding::UTF8->GetBytes(command);
-                                stream->Write(data, 0, data->Length);
-                                stream->Flush(); // Đảm bảo dữ liệu đã được gửi đi
-                                handleResponse(command, stream, specificSender);
+                                    // Gửi lệnh đến server
+                                    array<Byte>^ data = Encoding::UTF8->GetBytes(command);
+                                    stream->Write(data, 0, data->Length);
+                                    stream->Flush(); // Đảm bảo dữ liệu đã được gửi đi
 
-                                // Đóng kết nối
-                                stream->Close();
-                                client->Close();
+                                    // Xử lý phản hồi từ server
+                                    handleResponse(command, stream, specificSender);
+
+                                    // Đóng kết nối
+                                    stream->Close();
+                                    client->Close();
+                                }
+                                catch (Exception^ ex)
+                                {
+                                    Console::WriteLine("Error connecting to server at IP {0}: {1}", ip_add, ex->Message);
+
+                                    // Gửi email thông báo lỗi lại cho người gửi
+                                    String^ subject = "Error: Failed to Connect to Server";
+                                    String^ body = "The IP address provided in your email (" + ip_add +
+                                        ") could not be connected to. Please verify the IP address and try again.\r\n\r\nError Details:\r\n" + ex->Message;
+                                    SendEmail(oMail->From->Address, subject, body, nullptr);
+                                }
 
                                 // Đánh dấu email đã đọc nếu cần thiết
                                 oClient->MarkAsRead(mailInfo, true);
@@ -370,6 +423,7 @@ int main(array<System::String^>^ args)
     catch (Exception^ ep)
     {
         Console::WriteLine("Error: {0}", ep->Message);
+
     }
 
     return 0;
