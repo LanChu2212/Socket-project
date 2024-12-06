@@ -7,7 +7,6 @@ using namespace System::Net::Mail;
 using namespace System::Net::Sockets;
 using namespace System::Text;
 using namespace EAGetMail; // Thư viện EAGetMail cho email
-#include <iostream>
 // Hàm tạo tên file tạm thời (có thể không cần trong trường hợp này nếu bạn không lưu file)
 static String ^ GenerateFileName(int sequence) {
     DateTime currentDateTime = DateTime::Now;
