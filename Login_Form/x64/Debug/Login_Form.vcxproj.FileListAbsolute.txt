@@ -16,3 +16,9 @@ C:\Users\FPT\source\repos\Socket_project\Login_Form\x64\Debug\LoginForm.ServerFo
 C:\Users\FPT\source\repos\Socket_project\Login_Form\x64\Debug\Login_Form.vcxproj.GenerateResource.cache
 C:\Users\FPT\source\repos\Socket_project\Login_Form\x64\Debug\Login_Form.vcxproj.CopyComplete
 C:\Users\FPT\source\repos\Socket_project\Login_Form\x64\Debug\Project1.exe
+D:\Socket\Socket-project\Login_Form\x64\Debug\Login_Form.vcxproj.AssemblyReference.cache
+D:\Socket\Socket-project\Login_Form\x64\Debug\LoginForm.MyForm.resources
+D:\Socket\Socket-project\Login_Form\x64\Debug\LoginForm.ServerForm.resources
+D:\Socket\Socket-project\Login_Form\x64\Debug\Login_Form.vcxproj.GenerateResource.cache
+D:\Socket\Socket-project\Login_Form\x64\Debug\Login_Form.vcxproj.CopyComplete
+D:\Socket\Socket-project\Login_Form\x64\Debug\Project1.exe

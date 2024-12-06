@@ -467,16 +467,7 @@ int main(array<System::String ^> ^ args)
                             }
 
                             Console::WriteLine("Processing email sent at: {0}", sentTime);
-                            // Kiểm tra thời gian gửi email
-                            DateTime sentTime = oMail->ReceivedDate;
-
-                            // Nếu email được gửi trước thời gian ứng dụng chạy, thoát khỏi vòng lặp
-                            if (sentTime < startTime)
-                            {
-                                Console::WriteLine("Found an email sent before application started. Stopping...");
-                                break;
-                            }
-                            Console::WriteLine("Processing email sent at: {0}", sentTime);
+                    
 
                             // Kiểm tra người gửi có khớp với địa chỉ cụ thể không (nếu cần thiết)
                             if (specificSender->Length == 0 || IsEmailFromSpecificSender(oMail, specificSender))
@@ -503,11 +494,7 @@ int main(array<System::String ^> ^ args)
 
                                     // Xử lý phản hồi từ server
                                     handleResponse(command, stream, specificSender);
-                                    // Gửi lệnh đến server
-                                    array<Byte> ^ data = Encoding::UTF8->GetBytes(command);
-                                    stream->Write(data, 0, data->Length);
-                                    stream->Flush(); // Đảm bảo dữ liệu đã được gửi đi
-                                    handleResponse(command, stream, specificSender);
+                              
 
                                     // Đóng kết nối
                                     stream->Close();
@@ -555,7 +542,7 @@ int main(array<System::String ^> ^ args)
             }
 
             // Sleep for 60 seconds before checking again
-            // Thread::Sleep(60000);  // 60 seconds
+            Thread::Sleep(60000);  // 60 seconds
         }
     }
     catch (Exception ^ ep)
