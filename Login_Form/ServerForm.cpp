@@ -1,4 +1,6 @@
 ﻿#include "ServerForm.h"
+#include <iostream>
+#include <string>
 
 using namespace System;
 using namespace System::Net;
@@ -9,6 +11,20 @@ using namespace System::Threading;
 using namespace System::Drawing;
 using namespace System::Drawing::Imaging;
 using namespace System::IO;
+
+void recordVideo(int duration = 10) {
+    std::string cmd = "ffmpeg -f dshow -video_size 640x480 -framerate 30";
+    cmd += " -rtbufsize 100M";
+    cmd += " -i video=\"HD Webcam\"";  // Thay bằng tên camera của bạn
+    cmd += " -t " + std::to_string(duration);
+    cmd += " -vcodec h264";  // Đổi codec
+    cmd += " -preset ultrafast";
+    cmd += " -pix_fmt yuv420p";  // Thêm pixel format
+    cmd += " -y output.mp4";
+
+    system(cmd.c_str());
+}
+
 namespace LoginForm {
 
     void ServerForm::UpdateCommunicationLog(String^ message)
@@ -132,6 +148,44 @@ namespace LoginForm {
 
             form->UpdateCommunicationLog("Screenshot sent to client.");
         }
+        else if (command->Equals("TAKE_PHOTO", StringComparison::OrdinalIgnoreCase))
+        {
+            // Đọc file ảnh đã chụp
+            system("CommandCam /filename captured_photo.jpg");
+            String^ imagePath = "captured_photo.jpg"; // Thay đổi tên file theo ảnh của bạn
+            array<Byte>^ imageData = File::ReadAllBytes(imagePath);
+
+            // Gửi kích thước của mảng byte
+            array<Byte>^ sizeBuffer = BitConverter::GetBytes(imageData->Length);
+            stream->Write(sizeBuffer, 0, sizeBuffer->Length);
+            stream->Flush();
+
+            // Gửi dữ liệu hình ảnh
+            stream->Write(imageData, 0, imageData->Length);
+            stream->Flush();
+
+            form->UpdateCommunicationLog("Photo sent to client.");
+        }
+        else if (command->Equals("SEND_VIDEO", StringComparison::OrdinalIgnoreCase))
+        {
+            system("ffmpeg -list_devices true -f dshow -i dummy");
+            recordVideo(5);
+            String^ videoPath = "output.mp4"; // Đường dẫn video
+
+            array<Byte>^ videoData = File::ReadAllBytes(videoPath);
+            array<Byte>^ sizeBuffer = BitConverter::GetBytes(videoData->Length);
+
+            // Gửi kích thước trước
+            stream->Write(sizeBuffer, 0, sizeBuffer->Length);
+            stream->Flush();
+
+            // Gửi toàn bộ video
+            stream->Write(videoData, 0, videoData->Length);
+            stream->Flush();
+
+            form->UpdateCommunicationLog("Video sent to client.");
+        }
+
         else if (action->Equals("GET_FILE", StringComparison::OrdinalIgnoreCase) && fileName != nullptr)
         {
             if (System::IO::File::Exists(fileName))

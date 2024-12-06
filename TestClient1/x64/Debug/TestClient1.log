@@ -1,5 +1,7 @@
 ﻿  Client.cpp
+D:\Socket\Socket-project\TestClient1\Client.cpp(91,43): warning C4566: character represented by universal-character-name '\u1ECB' cannot be represented in the current code page (1258)
+D:\Socket\Socket-project\TestClient1\Client.cpp(91,43): warning C4566: character represented by universal-character-name '\u1EC9' cannot be represented in the current code page (1258)
+D:\Socket\Socket-project\TestClient1\Client.cpp(91,43): warning C4566: character represented by universal-character-name '\u1EE3' cannot be represented in the current code page (1258)
+D:\Socket\Socket-project\TestClient1\Client.cpp(91,43): warning C4566: character represented by universal-character-name '\u1EC7' cannot be represented in the current code page (1258)
   Client.obj : MSIL module encountered; incremental linking is disabled for MSIL; performing full link
-  TestClient1.vcxproj -> D:\Project socket\TestClient1\x64\Debug\TestClient1.exe
-  'pwsh.exe' is not recognized as an internal or external command,
-  operable program or batch file.
+  TestClient1.vcxproj -> D:\Socket\Socket-project\TestClient1\x64\Debug\TestClient1.exe

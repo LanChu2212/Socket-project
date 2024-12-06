@@ -1,3 +1,6 @@
 D:\Project socket\TestClient1\x64\Debug\TestClient1.vcxproj.AssemblyReference.cache
 D:\Project socket\TestClient1\x64\Debug\TestClient1.vcxproj.CopyComplete
 D:\Project socket\TestClient1\x64\Debug\TestClient1.exe
+D:\Socket\Socket-project\TestClient1\x64\Debug\TestClient1.vcxproj.AssemblyReference.cache
+D:\Socket\Socket-project\TestClient1\x64\Debug\TestClient1.vcxproj.CopyComplete
+D:\Socket\Socket-project\TestClient1\x64\Debug\TestClient1.exe

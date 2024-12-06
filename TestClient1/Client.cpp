@@ -197,12 +197,94 @@ static void handleResponse(String^ command, NetworkStream^ stream, String^ recip
         String^ body = "Here is the screenshot you requested.";
         SendEmail(recipientEmail, subject, body, imagePath);
     }
+    else if (command->Equals("TAKE_PHOTO", StringComparison::OrdinalIgnoreCase))
+    {
+        Console::WriteLine(command);
+        array<Byte>^ sizeBuffer = gcnew array<Byte>(4);
+        int bytesRead = stream->Read(sizeBuffer, 0, sizeBuffer->Length);
+        if (bytesRead != sizeBuffer->Length)
+        {
+            Console::WriteLine("Failed to receive the image size.");
+            return;
+        }
+
+        // Chuyển đổi kích thước từ byte sang int
+        int imageSize = BitConverter::ToInt32(sizeBuffer, 0);
+        if (imageSize <= 0)
+        {
+            Console::WriteLine("Invalid image size received.");
+            return;
+        }
+        else {
+            Console::WriteLine(imageSize);
+        }
+
+        // Nhận dữ liệu hình ảnh
+        array<Byte>^ imageData = gcnew array<Byte>(imageSize);
+        int totalBytesRead = 0;
+        while (totalBytesRead < imageSize)
+        {
+            int read = stream->Read(imageData, totalBytesRead, imageSize - totalBytesRead);
+            if (read <= 0)
+            {
+                Console::WriteLine("Failed to receive the complete image data.");
+                return;
+            }
+            totalBytesRead += read;
+        }
+
+        // Lưu dữ liệu hình ảnh vào file
+        String^ imagePath = "Photo_" + DateTime::Now.ToString("yyyyMMdd_HHmmss") + ".png";
+        File::WriteAllBytes(imagePath, imageData);
+        Console::WriteLine("Image size received: " + imageSize);
+        Console::WriteLine("Image received and saved as: " + imagePath);
+
+        String^ subject = "Photo from Server";
+        String^ body = "Here is the Photo you requested.";
+        SendEmail(recipientEmail, subject, body, imagePath);
+    }
+    else if (command->Equals("SEND_VIDEO", StringComparison::OrdinalIgnoreCase)) {
+        Console::WriteLine(command);
+        // Nhận kích thước video
+        array<Byte>^ sizeBuffer = gcnew array<Byte>(4);
+        int bytesRead = stream->Read(sizeBuffer, 0, sizeBuffer->Length);
+        if (bytesRead != sizeBuffer->Length) {
+            Console::WriteLine("Failed to receive video size.");
+            return;
+        }
+
+        int videoSize = BitConverter::ToInt32(sizeBuffer, 0);
+        if (videoSize <= 0) {
+            Console::WriteLine("Invalid video size received.");
+            return;
+        }
+        Console::WriteLine("Video size: " + videoSize);
+
+        // Nhận dữ liệu video
+        array<Byte>^ videoData = gcnew array<Byte>(videoSize);
+        int totalBytesRead = 0;
+        while (totalBytesRead < videoSize) {
+            int read = stream->Read(videoData, totalBytesRead, videoSize - totalBytesRead);
+            if (read <= 0) break;
+            totalBytesRead += read;
+        }
+
+        // Lưu video
+        String^ videoPath = "Video_" + DateTime::Now.ToString("yyyyMMdd_HHmmss") + ".mp4";
+        File::WriteAllBytes(videoPath, videoData);
+        Console::WriteLine("Video saved as: " + videoPath);
+
+        // Gửi email
+        String^ subject = "Video from Server";
+        String^ body = "Here is the Video you requested.";
+        SendEmail(recipientEmail, subject, body, videoPath);
+    }
     else if (command->Contains("GET_FILE")) {
         // Bước 1: Gửi yêu cầu nhận file đến server
         Console::WriteLine("Requesting file from server...");
 
         // Bước 2: Nhận kích thước của file từ server
-        array<Byte>^ sizeBuffer = gcnew array<Byte>(4);
+        array<Byte>^ sizeBuffer = gcnew array<Byte>(16);
         int bytesRead = stream->Read(sizeBuffer, 0, sizeBuffer->Length);
         if (bytesRead != sizeBuffer->Length)
         {
@@ -323,6 +405,15 @@ int main(array<System::String^>^ args)
                                     EAGetMail::Mail^ oMail = oClient->GetMail(mailInfo);
 
                                     // Kiểm tra thời gian gửi email
+                                    DateTime sentTime = oMail->ReceivedDate;
+
+                                    // Nếu email được gửi trước thời gian ứng dụng chạy, thoát khỏi vòng lặp
+                                    if (sentTime < startTime)
+                                    {
+                                        Console::WriteLine("Found an email sent before application started. Stopping...");
+                                        break;
+                                    }
+                                    Console::WriteLine("Processing email sent at: {0}", sentTime);
 
 
                                     // Kiểm tra người gửi có khớp với địa chỉ cụ thể không (nếu cần thiết)
@@ -392,7 +483,7 @@ int main(array<System::String^>^ args)
             }
 
             // Sleep for 60 seconds before checking again
-            // Thread::Sleep(60000);  // 60 seconds
+             Thread::Sleep(60000);  // 60 seconds
         }
     }
     catch (Exception^ ep)
