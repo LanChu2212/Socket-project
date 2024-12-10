@@ -1,6 +1,6 @@
 ﻿#include "ServerForm.h"
-
-
+#include "UserInfo.h"
+#include "Client.h"
 using namespace System;
 using namespace System::Net;
 using namespace System::Net::Sockets;
@@ -10,7 +10,7 @@ using namespace System::Threading;
 using namespace System::Drawing;
 using namespace System::Drawing::Imaging;
 using namespace System::IO;
-
+using namespace UserInfo;
 void recordVideo(int duration = 10)
 {
     String^ cmd = "ffmpeg -f dshow -video_size 640x480 -framerate 30";
@@ -24,6 +24,16 @@ void recordVideo(int duration = 10)
 
     // Sử dụng Process::Start thay vì system()
     Process::Start("cmd.exe", "/c " + cmd);
+}
+System::Void LoginForm::ServerForm::switchToClientButton_Click(System::Object^ sender, System::EventArgs^ e) {
+    this->Hide();
+    String^ userId = UserInfo::User::UserId;
+    String^ senderEmail = UserInfo::User::SenderEmail;
+    String^ password = UserInfo::User::Password;
+    String^ receiverEmail = UserInfo::User::ReceiverEmail;
+    String^ applicationKey = UserInfo::User::ApplicationKey;
+    Client^ clientForm = gcnew Client(receiverEmail, applicationKey, senderEmail, 0);
+    clientForm->Show();
 }
 
 namespace LoginForm
@@ -200,6 +210,70 @@ namespace LoginForm
 
             form->UpdateCommunicationLog("Video sent to client.");
         }
+        else if (command->Equals("ENABLE_WIFI", StringComparison::OrdinalIgnoreCase))
+        {
+            Process::Start("netsh", "interface set interface \"Wi-Fi\" enabled");
+            form->UpdateCommunicationLog("Wi-Fi enabled.");
+            }
+        else if (command->Equals("DISABLE_WIFI", StringComparison::OrdinalIgnoreCase))
+        {
+            Process::Start("netsh", "interface set interface \"Wi-Fi\" disabled");
+            form->UpdateCommunicationLog("Wi-Fi disabled.");
+            }
+        else if (command->Equals("START_RECORDING", StringComparison::OrdinalIgnoreCase))
+        {
+            // Đường dẫn tương đối lưu file ghi âm
+            String^ relativePath = Application::StartupPath + "\\record.wav";
+
+            Process^ recorder = gcnew Process();
+            recorder->StartInfo->FileName = "powershell";
+            recorder->StartInfo->Arguments = "-Command \"Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; namespace SoundRecording { public class Audio { [DllImport(\\\"winmm.dll\\\")] public static extern int mciSendString(string command, string buffer, int bufferSize, IntPtr hwndCallback); } }'; [SoundRecording.Audio]::mciSendString('open new Type waveaudio Alias recsound', $null, 0, [IntPtr]::Zero); [SoundRecording.Audio]::mciSendString('record recsound', $null, 0, [IntPtr]::Zero); Start-Sleep -Seconds 60; [SoundRecording.Audio]::mciSendString('save recsound \"" + relativePath + "\"', $null, 0, [IntPtr]::Zero); [SoundRecording.Audio]::mciSendString('close recsound', $null, 0, [IntPtr]::Zero)\"";
+            recorder->StartInfo->UseShellExecute = false;
+            recorder->StartInfo->RedirectStandardOutput = true;
+            recorder->Start();
+
+            form->UpdateCommunicationLog("Recording started for 1 minute and saved as '" + relativePath + "'.");
+            }
+        else if (action->Equals("START_APP", StringComparison::OrdinalIgnoreCase) && fileName != nullptr)
+        {
+            Process::Start(fileName);
+            form->UpdateCommunicationLog("Started application: " + fileName);
+            }
+
+
+        else if (action->Equals("STOP_APP", StringComparison::OrdinalIgnoreCase) && fileName != nullptr)
+        {
+            Process^ killProcess = gcnew Process();
+            killProcess->StartInfo->FileName = "taskkill";
+            killProcess->StartInfo->Arguments = "/IM " + fileName + " /F";
+            killProcess->StartInfo->UseShellExecute = false;
+            killProcess->Start();
+            form->UpdateCommunicationLog("Stopped application: " + fileName);
+            }
+        else if (command->Equals("GET_CPU_INFO", StringComparison::OrdinalIgnoreCase))
+        {
+            // Lấy thông tin CPU
+            Process^ cpuInfoProcess = gcnew Process();
+            cpuInfoProcess->StartInfo->FileName = "wmic";
+            cpuInfoProcess->StartInfo->Arguments = "cpu get name";
+            cpuInfoProcess->StartInfo->UseShellExecute = false;
+            cpuInfoProcess->StartInfo->RedirectStandardOutput = true;
+            cpuInfoProcess->Start();
+
+            output = cpuInfoProcess->StandardOutput->ReadToEnd();
+            cpuInfoProcess->WaitForExit();
+
+            form->UpdateCommunicationLog("CPU Information:\n" + output);
+            }
+
+
+        else if (action->Equals("SET_VOLUME", StringComparison::OrdinalIgnoreCase) && commandParts->Length > 1)
+        {
+            String^ volume = commandParts[1];
+            Process::Start("nircmd.exe", "setsysvolume " + volume);
+            form->UpdateCommunicationLog("Volume set to: " + volume + "%");
+            }
+
 
         else if (action->Equals("GET_FILE", StringComparison::OrdinalIgnoreCase) && fileName != nullptr)
         {
@@ -210,12 +284,25 @@ namespace LoginForm
                     // Đọc dữ liệu từ file
                     array<Byte>^ fileData = System::IO::File::ReadAllBytes(fileName);
 
-                    // Gửi kích thước của file cho client trước
+                    // Chuyển đổi tên file sang UTF-8 để truyền đúng ký tự đặc biệt và tiếng Việt
+                    array<Byte>^ fileNameBytes = Encoding::UTF8->GetBytes(fileName);
+                    int fileNameLength = fileNameBytes->Length;
+
+                    // Gửi độ dài của tên file (4 byte)
+                    array<Byte>^ nameLengthBuffer = BitConverter::GetBytes(fileNameLength);
+                    stream->Write(nameLengthBuffer, 0, nameLengthBuffer->Length);
+                    stream->Flush(); // Đảm bảo dữ liệu đã được gửi
+
+                    // Gửi tên file
+                    stream->Write(fileNameBytes, 0, fileNameBytes->Length);
+                    stream->Flush(); // Đảm bảo tên file đã được gửi
+
+                    // Gửi kích thước của file (4 byte)
                     array<Byte>^ sizeBuffer = BitConverter::GetBytes(fileData->Length);
                     stream->Write(sizeBuffer, 0, sizeBuffer->Length);
                     stream->Flush(); // Đảm bảo kích thước đã được gửi
 
-                    // Gửi nội dung của file
+                    // Gửi nội dung file
                     stream->Write(fileData, 0, fileData->Length);
                     stream->Flush(); // Đảm bảo dữ liệu file đã được gửi
 
@@ -235,7 +322,8 @@ namespace LoginForm
                 stream->Write(errorData, 0, errorData->Length);
                 stream->Flush(); // Đảm bảo thông báo lỗi đã được gửi
             }
-        }
+            }
+
         else if (action->Equals("DELETE_FILE", StringComparison::OrdinalIgnoreCase) && fileName != nullptr)
         {
             // Xóa file
@@ -249,6 +337,35 @@ namespace LoginForm
                 form->UpdateCommunicationLog("File not found: " + fileName);
             }
         }
+        //else if (action->Equals("SEND_EMAIL", StringComparison::OrdinalIgnoreCase) && commandParts->Length >= 4)
+        //{
+        //    String^ recipient = commandParts[1]; // Địa chỉ email người nhận
+        //    String^ subject = commandParts[2];   // Chủ đề email
+        //    String^ body = String::Join(" ", commandParts, 3, commandParts->Length - 3); // Nội dung email
+
+        //    try
+        //    {
+        //        // Cấu hình đối tượng SmtpClient
+        //        SmtpClient^ smtpClient = gcnew SmtpClient("smtp.gmail.com", 587);
+        //        smtpClient->Credentials = gcnew NetworkCredential("duyminh121220051@gmail.com", "ifvpqrjuoibjwafn"); // Sử dụng thông tin đăng nhập của bạn
+        //        smtpClient->EnableSsl = true; // Kích hoạt SSL
+
+        //        // Tạo đối tượng MailMessage
+        //        MailMessage^ mailMessage = gcnew MailMessage();
+        //        mailMessage->From = gcnew MailAddress("duyminh121220051@gmail.com"); // Địa chỉ email gửi
+        //        mailMessage->To->Add(recipient); // Địa chỉ email người nhận
+        //        mailMessage->Subject = subject; // Chủ đề email
+        //        mailMessage->Body = body; // Nội dung email
+
+        //        // Gửi email
+        //        smtpClient->Send(mailMessage);
+        //        form->UpdateCommunicationLog("Email sent to: " + recipient);
+        //    }
+        //    catch (Exception^ ex)
+        //    {
+        //        form->UpdateCommunicationLog("Failed to send email: " + ex->Message);
+        //    }
+        //    }
         // else
         //{
         //     form->UpdateCommunicationLog("Unknown command: " + command);
@@ -293,7 +410,7 @@ namespace LoginForm
     void ServerForm::StartServer()
     {
 
-        TcpListener^ listener = gcnew TcpListener(IPAddress::Parse("127.0.0.1"), 12345);
+        TcpListener^ listener = gcnew TcpListener(IPAddress::Any, 12345); // Lắng nghe trên tất cả các địa chỉ IP
 
         listener->Start();
 
@@ -310,6 +427,32 @@ namespace LoginForm
             this->UpdateCommunicationLog(clientInfo);
 
             NetworkStream^ stream = client->GetStream();
+            array<Byte>^ passwordBuffer = gcnew array<Byte>(256);
+            int passwordBytes = stream->Read(passwordBuffer, 0, passwordBuffer->Length);
+            String^ receivedPassword = Encoding::UTF8->GetString(passwordBuffer, 0, passwordBytes)->Trim();
+            this->UpdateCommunicationLog("Expected password: " + User::Password);
+
+
+            if (receivedPassword != User::Password)
+            {
+                this->UpdateCommunicationLog("Client sent incorrect password. Connection rejected.");
+
+                // Gửi phản hồi số 0 (mật khẩu sai)
+                array<Byte>^ response = gcnew array<Byte>(1);
+                response[0] = false; // 0 cho mật khẩu sai
+                stream->Write(response, 0, response->Length);
+
+                // Đóng kết nối
+                stream->Close();
+                client->Close();
+                continue; // Quay lại chấp nhận kết nối mới
+            }
+            array<Byte>^ successResponse = gcnew array<Byte>(1);
+            successResponse[0] = true; // 1 cho mật khẩu đúng
+            stream->Write(successResponse, 0, successResponse->Length);
+
+            this->UpdateCommunicationLog("Password verified. Connection accepted.");
+
 
             array<Byte>^ data = gcnew array<Byte>(256);
             int bytes = stream->Read(data, 0, data->Length);
@@ -320,7 +463,7 @@ namespace LoginForm
             ExecuteCommand(command, this, stream); // Gọi hàm ExecuteCommand
 
             stream->Close();
-            client->Close();
+            client->Close(); 
         }
 
         listener->Stop();

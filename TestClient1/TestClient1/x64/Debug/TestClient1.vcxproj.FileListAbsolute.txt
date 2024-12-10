@@ -1,0 +1,2 @@
+C:\Users\Asus Vivobook\source\repos\Socket-project\TestClient1\TestClient1\x64\Debug\TestClient1.vcxproj.AssemblyReference.cache
+C:\Users\Asus Vivobook\source\repos\Socket-project\TestClient1\TestClient1\x64\Debug\TestClie.45826C14.Up2Date

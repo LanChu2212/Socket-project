@@ -396,25 +396,20 @@ static String ^ ExtractIpFromEmailBody(String ^ emailBody) {
         }
     }
 }
-
-int main(array<System::String ^> ^ args)
-{
-    try
-    {
+// Hàm chạy client với các tham số truyền vào
+void RunClient(String^ emailAddress, String^ appPassword, String^ specificSender = "", int checkInterval = 60) {
+    try {
         // Lưu lại thời gian khi ứng dụng khởi động
         DateTime startTime = DateTime::Now;
 
-        // Địa chỉ email của người gửi cụ thể cần lọc (có thể để trống nếu không cần lọc theo người gửi)
-        String ^ specificSender = "notfound567404@gmail.com";
-
         // Thư mục tạm cho email đã xử lý
-        String ^ processedEmailsFile = Path::Combine(Directory::GetCurrentDirectory(), "processed_emails.txt");
+        String^ processedEmailsFile = Path::Combine(Directory::GetCurrentDirectory(), "processed_emails.txt");
 
         // Cấu hình máy chủ Gmail IMAP
-        MailServer ^ oServer = gcnew MailServer("imap.gmail.com",
-                                                "huynhtrungkiet09032005@gmail.com", // Địa chỉ email của bạn
-                                                "ifztigzwrspjwhch",                 // Mật khẩu ứng dụng
-                                                ServerProtocol::Imap4);             // Giao thức IMAP
+        MailServer^ oServer = gcnew MailServer("imap.gmail.com",
+            emailAddress, // Địa chỉ email của bạn
+            appPassword,   // Mật khẩu ứng dụng
+            ServerProtocol::Imap4); // Giao thức IMAP
 
         oServer->SSLConnection = true; // Sử dụng kết nối SSL/TLS
         oServer->Port = 993;           // Cổng SSL/TLS IMAP
@@ -422,91 +417,79 @@ int main(array<System::String ^> ^ args)
         Console::WriteLine("Connecting to IMAP server...");
 
         // Tạo đối tượng MailClient
-        MailClient ^ oClient = gcnew MailClient("TryIt");
+        MailClient^ oClient = gcnew MailClient("TryIt");
 
-        while (true) // Liên tục kiểm tra email mới
-        {
-            try
-            {
+        while (true) { // Liên tục kiểm tra email mới
+            try {
                 oClient->Connect(oServer);
                 Console::WriteLine("Connected to IMAP server");
-                array<Imap4Folder ^> ^ folders = oClient->GetFolders();
-                Imap4Folder ^ inboxFolder = FindInboxFolder(folders);
+                array<Imap4Folder^>^ folders = oClient->GetFolders();
+                Imap4Folder^ inboxFolder = FindInboxFolder(folders);
 
-                if (inboxFolder != nullptr)
-                {
+                if (inboxFolder != nullptr) {
                     oClient->SelectFolder(inboxFolder);
-                    array<MailInfo ^> ^ infos = oClient->GetMailInfos();
+                    array<MailInfo^>^ infos = oClient->GetMailInfos();
                     Console::WriteLine("Total {0} email(s)\r\n", infos->Length);
 
-                    if (infos->Length > 0)
-                    {
-                        for (int i = infos->Length - 1; i >= 0; i--)
-                        {
-                            MailInfo ^ mailInfo = infos[i];
-                            String ^ messageId = mailInfo->UIDL; // Sử dụng UIDL để phân biệt email
+                    if (infos->Length > 0) {
+                        for (int i = infos->Length - 1; i >= 0; i--) {
+                            MailInfo^ mailInfo = infos[i];
+                            String^ messageId = mailInfo->UIDL; // Sử dụng UIDL để phân biệt email
 
-                            if (IsEmailProcessed(messageId, processedEmailsFile))
-                            {
+                            if (IsEmailProcessed(messageId, processedEmailsFile)) {
                                 Console::WriteLine("Email already processed. Skipping...");
                                 continue; // Bỏ qua email này
                             }
 
                             // Lấy nội dung email
-                            EAGetMail::Mail ^ oMail = oClient->GetMail(mailInfo);
+                            EAGetMail::Mail^ oMail = oClient->GetMail(mailInfo);
 
                             // Kiểm tra thời gian gửi email
                             DateTime sentTime = oMail->ReceivedDate;
 
                             // Nếu email được gửi trước thời gian ứng dụng chạy, thoát khỏi vòng lặp
-                            if (sentTime < startTime)
-                            {
+                            if (sentTime < startTime) {
                                 Console::WriteLine("Found an email sent before application started. Stopping...");
                                 break;
                             }
 
                             Console::WriteLine("Processing email sent at: {0}", sentTime);
-                    
 
                             // Kiểm tra người gửi có khớp với địa chỉ cụ thể không (nếu cần thiết)
-                            if (specificSender->Length == 0 || IsEmailFromSpecificSender(oMail, specificSender))
-                            {
+                            if (specificSender->Length == 0 || IsEmailFromSpecificSender(oMail, specificSender)) {
                                 Console::WriteLine("From: {0}", oMail->From->ToString());
                                 Console::WriteLine("Subject: {0}\r\n", oMail->Subject);
                                 Console::WriteLine("Body: {0}\r\n", oMail->TextBody); // In ra nội dung email
 
                                 // Gửi lệnh từ nội dung email đến server điều khiển
-                                String ^ ip_add = ExtractIpFromEmailBody(oMail->TextBody->Trim());
-                                String ^ command = ExtractCommandFromEmailBody(oMail->TextBody->Trim());
+                                String^ ip_add = ExtractIpFromEmailBody(oMail->TextBody->Trim());
+                                String^ command = ExtractCommandFromEmailBody(oMail->TextBody->Trim());
 
                                 // Thực thi lệnh qua socket
-                                try
-                                {
-                                    TcpClient ^ client = gcnew TcpClient();
+                                try {
+                                    TcpClient^ client = gcnew TcpClient();
                                     client->Connect(ip_add, 12345); // Kết nối đến server
-                                    NetworkStream ^ stream = client->GetStream();
+                                    NetworkStream^ stream = client->GetStream();
 
                                     // Gửi lệnh đến server
-                                    array<Byte> ^ data = Encoding::UTF8->GetBytes(command);
+                                    array<Byte>^ data = Encoding::UTF8->GetBytes(command);
                                     stream->Write(data, 0, data->Length);
                                     stream->Flush(); // Đảm bảo dữ liệu đã được gửi đi
 
                                     // Xử lý phản hồi từ server
                                     handleResponse(command, stream, specificSender);
-                              
 
                                     // Đóng kết nối
                                     stream->Close();
                                     client->Close();
                                 }
-                                catch (Exception ^ ex)
-                                {
+                                catch (Exception^ ex) {
                                     Console::WriteLine("Error connecting to server at IP {0}: {1}", ip_add, ex->Message);
 
                                     // Gửi email thông báo lỗi lại cho người gửi
-                                    String ^ subject = "Error: Failed to Connect to Server";
-                                    String ^ body = "The IP address provided in your email (" + ip_add +
-                                                    ") could not be connected to. Please verify the IP address and try again.\r\n\r\nError Details:\r\n" + ex->Message;
+                                    String^ subject = "Error: Failed to Connect to Server";
+                                    String^ body = "The IP address provided in your email (" + ip_add +
+                                        ") could not be connected to. Please verify the IP address and try again.\r\n\r\nError Details:\r\n" + ex->Message;
                                     SendEmail(oMail->From->Address, subject, body, nullptr);
                                 }
 
@@ -516,38 +499,50 @@ int main(array<System::String ^> ^ args)
                                 // Lưu lại email đã xử lý
                                 SaveProcessedEmail(messageId, processedEmailsFile);
                             }
-                            else
-                            {
+                            else {
                                 Console::WriteLine("Email is not from the specified sender: {0}\r\n", oMail->From->ToString());
                             }
                         }
                     }
-                    else
-                    {
+                    else {
                         Console::WriteLine("No emails found!");
                     }
                 }
-                else
-                {
+                else {
                     Console::WriteLine("Inbox folder not found!");
                 }
 
                 oClient->Quit();
                 Console::WriteLine("Waiting for the next check...");
             }
-            catch (Exception ^ e)
-            {
+            catch (Exception^ e) {
                 Console::WriteLine("Error: {0}", e->Message);
             }
 
-            // Sleep for 60 seconds before checking again
-            Thread::Sleep(60000);  // 60 seconds
+            // Sleep for checkInterval seconds before checking again
+            Thread::Sleep(checkInterval * 1000);  // Thời gian kiểm tra
         }
     }
-    catch (Exception ^ ep)
-    {
+    catch (Exception^ ep) {
         Console::WriteLine("Error: {0}", ep->Message);
     }
+}
 
-    return 0;
+// Hàm chính để gọi RunClient từ nơi khác
+void StartApplication(String^ emailAddress, String^ appPassword, String^ specificSender = "", int checkInterval = 1) {
+    RunClient(emailAddress, appPassword, specificSender, checkInterval);
+}
+using namespace System;
+
+int main(array<System::String^>^ args) {
+    // Địa chỉ email và mật khẩu ứng dụng
+    String^ emailAddress = "huynhtrungkiet09032005@gmail.com"; // Địa chỉ email của bạn
+    String^ appPassword = "ifztigzwrspjwhch"; // Mật khẩu ứng dụng của bạn
+    String^ specificSender = ""; // Người gửi cụ thể (có thể thay đổi)
+    int checkInterval = 1; // Khoảng thời gian kiểm tra (mặc định là 60 giây)
+
+    // Gọi hàm StartApplication để bắt đầu kiểm tra email
+    StartApplication(emailAddress, appPassword, specificSender, checkInterval);
+
+    return 0; // Thoát thành công
 }

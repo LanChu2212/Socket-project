@@ -1,9 +1,9 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\Asus Vivobook\\source\\repos\\TestClient1\\",
+  "WorkspaceRootPath": "C:\\Users\\Asus Vivobook\\source\\repos\\Socket-project\\TestClient1\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{0DCC6279-93E7-44AF-9B68-1F313D6B1647}|TestClient1.vcxproj|C:\\Users\\Asus Vivobook\\source\\repos\\TestClient1\\Client.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "AbsoluteMoniker": "D:0:0:{0DCC6279-93E7-44AF-9B68-1F313D6B1647}|TestClient1.vcxproj|C:\\Users\\Asus Vivobook\\source\\repos\\Socket-project\\TestClient1\\Client.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{0DCC6279-93E7-44AF-9B68-1F313D6B1647}|TestClient1.vcxproj|solutionrelative:Client.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
@@ -14,19 +14,15 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 9,
+          "SelectedChildIndex": 8,
           "Children": [
             {
               "$type": "Bookmark",
-              "Name": "ST:129:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
             },
             {
               "$type": "Bookmark",
               "Name": "ST:128:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
             },
             {
               "$type": "Bookmark",
@@ -42,7 +38,7 @@
             },
             {
               "$type": "Bookmark",
-              "Name": "ST:0:0:{a80febb4-e7e0-4147-b476-21aaf2453969}"
+              "Name": "ST:129:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
             },
             {
               "$type": "Bookmark",
@@ -56,18 +52,14 @@
               "$type": "Document",
               "DocumentIndex": 0,
               "Title": "Client.cpp",
-              "DocumentMoniker": "C:\\Users\\Asus Vivobook\\source\\repos\\TestClient1\\Client.cpp",
+              "DocumentMoniker": "C:\\Users\\Asus Vivobook\\source\\repos\\Socket-project\\TestClient1\\Client.cpp",
               "RelativeDocumentMoniker": "Client.cpp",
-              "ToolTip": "C:\\Users\\Asus Vivobook\\source\\repos\\TestClient1\\Client.cpp",
+              "ToolTip": "C:\\Users\\Asus Vivobook\\source\\repos\\Socket-project\\TestClient1\\Client.cpp",
               "RelativeToolTip": "Client.cpp",
-              "ViewState": "AgIAAIsAAAAAAAAAAAAmwIwAAAARAAAAAAAAAA==",
+              "ViewState": "AgIAAKABAAAAAAAAAAAcwB8CAAAPAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2024-10-15T12:45:34.036Z",
               "EditorCaption": ""
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{269a02dc-6af8-11d3-bdc4-00c04f688e50}"
             }
           ]
         }

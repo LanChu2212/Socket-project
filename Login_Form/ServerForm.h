@@ -1,5 +1,5 @@
-﻿#pragma once
-
+﻿
+#pragma once
 namespace LoginForm {
 
     using namespace System;
@@ -8,15 +8,15 @@ namespace LoginForm {
     using namespace System::Windows::Forms;
     using namespace System::Data;
     using namespace System::Net::Sockets;
-
     using namespace System::Drawing;
 
     public ref class ServerForm : public System::Windows::Forms::Form
     {
     public:
-        ServerForm(void)
+        ServerForm()
         {
             InitializeComponent();
+
         }
         
     protected:
@@ -41,6 +41,8 @@ namespace LoginForm {
         System::Windows::Forms::GroupBox^ groupBoxControls; // GroupBox for buttons
 
         System::ComponentModel::Container^ components;
+        // Add this to the private section of your ServerForm class
+        Button^ switchToClientButton;
 
         void InitializeComponent(void)
         {
@@ -53,7 +55,23 @@ namespace LoginForm {
             this->groupBoxControls = (gcnew System::Windows::Forms::GroupBox());
             (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureBoxStatus))->BeginInit();
             this->groupBoxControls->SuspendLayout();
+
+            this->switchToClientButton = (gcnew System::Windows::Forms::Button());
             this->SuspendLayout();
+            // 
+   // switchToClientButton
+   // 
+            this->switchToClientButton->Dock = System::Windows::Forms::DockStyle::Bottom;
+            this->switchToClientButton->Font = (gcnew System::Drawing::Font(L"Arial", 12, System::Drawing::FontStyle::Bold));
+            this->switchToClientButton->Location = System::Drawing::Point(0, 438);
+            this->switchToClientButton->Name = L"switchToClientButton";
+            this->switchToClientButton->Size = System::Drawing::Size(600, 50);
+            this->switchToClientButton->Text = L"Switch to Client";
+            this->switchToClientButton->UseVisualStyleBackColor = true;
+            this->switchToClientButton->Click += gcnew System::EventHandler(this, &ServerForm::switchToClientButton_Click);
+            // Add the new button to the controls
+            this->Controls->Add(this->switchToClientButton);
+
             // 
             // textBoxServerOutput
             // 
@@ -188,6 +206,11 @@ namespace LoginForm {
 
 private: System::Void textBoxServerOutput_TextChanged_2(System::Object^ sender, System::EventArgs^ e) {
 }
+       // Add the event handler
+private: System::Void switchToClientButton_Click(System::Object^ sender, System::EventArgs^ e);
+
 };
+
+
 
 }
