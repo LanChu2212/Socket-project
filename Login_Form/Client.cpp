@@ -378,12 +378,16 @@ void LoginForm::Client::RunClient(String^ emailAddress, String^ appPassword, Str
                                     String^ subject = "Error: The message is empty";
                                     String^ body = "The message is empty, please send again";
                                     SendEmail(oMail->From->Address, subject, body, nullptr, emailAddress, appPassword);
+                                    oClient->MarkAsRead(mailInfo, true);
+                                    SaveProcessedEmail(messageId, processedEmailsFile);
                                     continue;
                                 }
                                 if (details->Length < 3) {
                                     String^ subject = "Error: The message is misinformation";
                                     String^ body = "Maybe you miss IP address, password or command, please send enough 3 lines";
                                     SendEmail(oMail->From->Address, subject, body, nullptr, emailAddress, appPassword);
+                                    oClient->MarkAsRead(mailInfo, true);
+                                    SaveProcessedEmail(messageId, processedEmailsFile);
                                     continue;
                                 }
                                 String^ ip_add = details[0];

@@ -31,3 +31,6 @@ C:\Users\FPT\Downloads\Socket-project\Socket-project\Login_Form\x64\Debug\LoginF
 C:\Users\FPT\Downloads\Socket-project\Socket-project\Login_Form\x64\Debug\Login_Form.vcxproj.GenerateResource.cache
 C:\Users\FPT\Downloads\Socket-project\Socket-project\Login_Form\x64\Debug\Login_Form.vcxproj.CopyComplete
 C:\Users\FPT\Downloads\Socket-project\Socket-project\Login_Form\x64\Debug\Project1.exe
+D:\Socket\Socket-project\Login_Form\x64\Debug\LoginForm.Client.resources
+D:\Socket\Socket-project\Login_Form\x64\Debug\LoginForm.RegisterForm1.resources
+D:\Socket\Socket-project\Login_Form\x64\Debug\LoginForm.SelectionForm.resources
