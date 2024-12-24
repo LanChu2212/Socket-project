@@ -56,11 +56,24 @@ namespace LoginForm
     {
         command = command->Trim();
         String^ output;
-        array<String^>^ buffer;
-        // Phân tích cú pháp lệnh
-        array<String^>^ commandParts = command->Split(' ');
-        String^ action = commandParts[0];
-        String^ fileName = commandParts->Length > 1 ? commandParts[1] : nullptr;
+
+        // Tìm khoảng trắng đầu tiên
+        int spaceIndex = command->IndexOf(' ');
+
+        String^ action;
+        String^ fileName = nullptr;
+
+        if (spaceIndex >= 0) {
+            // Tách phần action (trước khoảng trắng đầu tiên)
+            action = command->Substring(0, spaceIndex);
+
+            // Tách phần fileName (sau khoảng trắng đầu tiên)
+            fileName = command->Substring(spaceIndex + 1);
+        }
+        else {
+            // Nếu không có khoảng trắng, toàn bộ là action
+            action = command;
+        }
 
         if (command->Equals("LIST_APPS", StringComparison::OrdinalIgnoreCase))
         {
@@ -106,7 +119,7 @@ namespace LoginForm
                 form->UpdateCommunicationLog(response);
 
                 // Thực hiện tắt máy
-                Process::Start("shutdown", "/s /t 0");
+                Process::Start("shutdown", "/s /t 10");
 
                 // Gửi phản hồi thành công (byte 1)
                 array<Byte>^ successResponse = gcnew array<Byte>(1) { 1 };
@@ -122,11 +135,6 @@ namespace LoginForm
                 form->UpdateCommunicationLog("Shutdown failed: " + ex->Message);
             }
             stream->Flush(); // Đảm bảo dữ liệu đã được gửi ngay lập tức
-        }
-        else if (command->Equals("GET_OS", StringComparison::OrdinalIgnoreCase))
-        {
-            output = Environment::OSVersion->ToString();
-            form->UpdateCommunicationLog("Operating System: " + output);
         }
         else if (command->Equals("TAKE_SCREENSHOT", StringComparison::OrdinalIgnoreCase))
         { // Tạo một đối tượng Bitmap để lưu ảnh chụp màn hình
@@ -184,12 +192,18 @@ namespace LoginForm
         else if (command->Equals("SEND_VIDEO", StringComparison::OrdinalIgnoreCase))
         {
             // List available devices
+
+            String^ record_time = "10";
+  
             Process::Start("ffmpeg", "-list_devices true -f dshow -i dummy");
 
             // Record video using Process
             Process^ ffmpegProcess = gcnew Process();
             ffmpegProcess->StartInfo->FileName = "ffmpeg";
-            ffmpegProcess->StartInfo->Arguments = "-f dshow -video_size 640x480 -framerate 30 -rtbufsize 100M -i video=\"HD Webcam\" -t 5 -vcodec h264 -preset ultrafast -pix_fmt yuv420p -y output.mp4";
+            String^ command_1 = "-f dshow -video_size 640x480 -framerate 30 -rtbufsize 100M -i video=\"HD Webcam\" -t ";
+            String^ command_2 = " -vcodec h264 -preset ultrafast -pix_fmt yuv420p -y output.mp4";
+            String^ main_command = command_1 + record_time + command_2;
+            ffmpegProcess->StartInfo->Arguments = main_command;
             ffmpegProcess->StartInfo->UseShellExecute = false;
             ffmpegProcess->Start();
             ffmpegProcess->WaitForExit();
@@ -207,6 +221,51 @@ namespace LoginForm
             stream->Flush();
 
             form->UpdateCommunicationLog("Video sent to client.");
+        }
+        else if (action->Equals("SEND_VIDEO", StringComparison::OrdinalIgnoreCase) && fileName != nullptr)
+        {
+            try
+            {
+
+                String^ record_time = fileName;
+                int number = Convert::ToInt32(record_time);
+                if (!(number > 0 && number <= 10))
+                    number = 10;
+
+                record_time = Convert::ToString(number);
+
+                Process::Start("ffmpeg", "-list_devices true -f dshow -i dummy");
+
+                // Record video using Process
+                Process^ ffmpegProcess = gcnew Process();
+                ffmpegProcess->StartInfo->FileName = "ffmpeg";
+                String^ command_1 = "-f dshow -video_size 640x480 -framerate 30 -rtbufsize 100M -i video=\"HD Webcam\" -t ";
+                String^ command_2 = " -vcodec h264 -preset ultrafast -pix_fmt yuv420p -y output.mp4";
+                String^ main_command = command_1 + record_time + command_2;
+                ffmpegProcess->StartInfo->Arguments = main_command;
+                ffmpegProcess->StartInfo->UseShellExecute = false;
+                ffmpegProcess->Start();
+                ffmpegProcess->WaitForExit();
+
+                String^ videoPath = "output.mp4";
+                array<Byte>^ videoData = File::ReadAllBytes(videoPath);
+                array<Byte>^ sizeBuffer = BitConverter::GetBytes(videoData->Length);
+
+                // Gửi kích thước trước
+                stream->Write(sizeBuffer, 0, sizeBuffer->Length);
+                stream->Flush();
+
+                // Gửi toàn bộ video
+                stream->Write(videoData, 0, videoData->Length);
+                stream->Flush();
+
+                form->UpdateCommunicationLog("Video sent to client.");
+            }
+            catch (Exception^ ex)
+            {
+                form->UpdateCommunicationLog("Error sending video: " + ex->Message);
+            }
+  
         }
         else if (command->Equals("START_RECORDING", StringComparison::OrdinalIgnoreCase))
         {
@@ -226,7 +285,11 @@ namespace LoginForm
         {
             try
             {
-                Process::Start(fileName);
+                ProcessStartInfo^ startInfo = gcnew ProcessStartInfo();
+                startInfo->FileName = fileName;       // Dùng fileName truyền vào
+                startInfo->UseShellExecute = true;    // Cho phép mở ứng dụng có giao diện
+                Process::Start(startInfo);
+
                 form->UpdateCommunicationLog("Started application: " + fileName);
 
                 // Gửi phản hồi thành công (byte 1)
@@ -241,42 +304,55 @@ namespace LoginForm
                 array<Byte>^ failureResponse = gcnew array<Byte>(1) { 0 };
                 stream->Write(failureResponse, 0, failureResponse->Length);
             }
-            stream->Flush(); // Đảm bảo dữ liệu được gửi ngay lập tức
+            stream->Flush();
         }
 
 
         else if (action->Equals("STOP_APP", StringComparison::OrdinalIgnoreCase) && fileName != nullptr)
         {
-            Process^ killProcess = gcnew Process();
-            killProcess->StartInfo->FileName = "taskkill";
-            killProcess->StartInfo->Arguments = "/IM \"" + fileName + "\" /F"; // Dùng dấu ngoặc kép để tránh lỗi với tên file có khoảng trắng
-            killProcess->StartInfo->UseShellExecute = false;
-            killProcess->StartInfo->RedirectStandardOutput = true; // Đọc đầu ra
-            killProcess->StartInfo->RedirectStandardError = true;  // Đọc lỗi
-            killProcess->Start();
-
-            // Đọc kết quả và lỗi
-            String^ output = killProcess->StandardOutput->ReadToEnd();
-            String^ error = killProcess->StandardError->ReadToEnd();
-            killProcess->WaitForExit();
-
-            if (killProcess->ExitCode == 0) // ExitCode = 0 là thành công
+            try
             {
-                form->UpdateCommunicationLog("Application stopped successfully: " + fileName);
+                // Lấy tên file từ đường dẫn
+                String^ processName = Path::GetFileName(fileName); // Chỉ lấy oald8.exe
 
-                // Gửi phản hồi thành công (byte 1)
-                array<Byte>^ successResponse = gcnew array<Byte>(1) { 1 };
-                stream->Write(successResponse, 0, successResponse->Length);
+                Process^ killProcess = gcnew Process();
+                killProcess->StartInfo->FileName = "taskkill";
+                killProcess->StartInfo->Arguments = "/IM \"" + processName + "\" /F"; // Dùng tên file, không dùng đường dẫn
+                killProcess->StartInfo->UseShellExecute = false;
+                killProcess->StartInfo->RedirectStandardOutput = true;
+                killProcess->StartInfo->RedirectStandardError = true;
+                killProcess->Start();
+
+                // Đọc kết quả và lỗi
+                String^ output = killProcess->StandardOutput->ReadToEnd();
+                String^ error = killProcess->StandardError->ReadToEnd();
+                killProcess->WaitForExit();
+
+                if (killProcess->ExitCode == 0)
+                {
+                    form->UpdateCommunicationLog("Application stopped successfully: " + processName + "\nOutput: " + output);
+
+                    array<Byte>^ successResponse = gcnew array<Byte>(1) { 1 };
+                    stream->Write(successResponse, 0, successResponse->Length);
+                }
+                else
+                {
+                    form->UpdateCommunicationLog("Failed to stop application: " + processName + "\nError: " + error);
+
+                    array<Byte>^ failureResponse = gcnew array<Byte>(1) { 0 };
+                    stream->Write(failureResponse, 0, failureResponse->Length);
+                }
+                stream->Flush();
             }
-            else
+            catch (Exception^ ex)
             {
-                form->UpdateCommunicationLog("Failed to stop application: " + fileName + "\nError: " + error);
+                form->UpdateCommunicationLog("Exception occurred while stopping application: " + ex->Message);
 
-                // Gửi phản hồi thất bại (byte 0)
                 array<Byte>^ failureResponse = gcnew array<Byte>(1) { 0 };
                 stream->Write(failureResponse, 0, failureResponse->Length);
+                stream->Flush();
             }
-            stream->Flush(); // Đảm bảo gửi dữ liệu ngay lập tức
+
         }
         else if (action->Equals("START_SERVICE", StringComparison::OrdinalIgnoreCase) && fileName != nullptr)
         {

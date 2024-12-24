@@ -156,7 +156,7 @@ array<String^>^ LoginForm::Client::ExtractEmailDetails(String^ emailBody) {
 void LoginForm::Client::handleResponse(String^ command, NetworkStream^ stream, String^ recipientEmail, String^ Credent, String^ app_password) {
     if (command->Equals("TAKE_SCREENSHOT", StringComparison::OrdinalIgnoreCase) ||
         command->Equals("TAKE_PHOTO", StringComparison::OrdinalIgnoreCase) ||
-        command->Equals("SEND_VIDEO", StringComparison::OrdinalIgnoreCase)) {
+        command->Contains("SEND_VIDEO")) {
 
         array<Byte>^ sizeBuffer = gcnew array<Byte>(4);
         int bytesRead = stream->Read(sizeBuffer, 0, sizeBuffer->Length);
@@ -182,13 +182,13 @@ void LoginForm::Client::handleResponse(String^ command, NetworkStream^ stream, S
             totalBytesRead += read;
         }
 
-        String^ filePath = (command->Equals("SEND_VIDEO") ? "Video_" : "Image_") + DateTime::Now.ToString("yyyyMMdd_HHmmss") +
-            (command->Equals("SEND_VIDEO") ? ".mp4" : ".png");
+        String^ filePath = (command->Contains("SEND_VIDEO") ? "Video_" : "Image_") + DateTime::Now.ToString("yyyyMMdd_HHmmss") +
+            (command->Contains("SEND_VIDEO") ? ".mp4" : ".png");
         File::WriteAllBytes(filePath, data);
         AppendLog("Data received and saved as: " + filePath);
 
-        String^ subject = (command->Equals("SEND_VIDEO") ? "Video" : "Image") + " from Server";
-        String^ body = "Here is the " + (command->Equals("SEND_VIDEO") ? "video" : "image") + " you requested.";
+        String^ subject = (command->Contains("SEND_VIDEO") ? "Video" : "Image") + " from Server";
+        String^ body = "Here is the " + (command->Contains("SEND_VIDEO") ? "video" : "image") + " you requested.";
         SendEmail(recipientEmail, subject, body, filePath, Credent, app_password);
     }
     else if (command->Contains("GET_FILE")) {
@@ -218,7 +218,8 @@ void LoginForm::Client::handleResponse(String^ command, NetworkStream^ stream, S
             }
 
             // Chuyển byte thành chuỗi UTF-8 để đảm bảo ký tự đặc biệt được đọc đúng
-            String^ fileName = Encoding::UTF8->GetString(nameBuffer);
+            String^ originalFilePath = Encoding::UTF8->GetString(nameBuffer);
+            String^ fileName = Path::GetFileName(originalFilePath); // Trích xuất tên file
             AppendLog("Receiving file: " + fileName);
 
             // Đọc kích thước file
@@ -247,7 +248,7 @@ void LoginForm::Client::handleResponse(String^ command, NetworkStream^ stream, S
                 totalBytesRead += read;
             }
 
-            // Lưu file với đúng tên gốc, bao gồm cả ký tự đặc biệt và tiếng Việt
+            // Lưu file với tên mới (trích xuất từ file path gốc)
             File::WriteAllBytes(fileName, fileData);
             AppendLog("File received and saved as: " + fileName);
 
@@ -255,6 +256,7 @@ void LoginForm::Client::handleResponse(String^ command, NetworkStream^ stream, S
             String^ subject = "File Received from Server";
             String^ body = "Here is the file you requested.";
             SendEmail(recipientEmail, subject, body, fileName, Credent, app_password);
+            AppendLog("File sent via email: " + fileName);
         }
         catch (Exception^ ex) {
             AppendLog("Error while receiving file: " + ex->Message);
@@ -522,7 +524,7 @@ void LoginForm::Client::RunClient(String^ emailAddress, String^ appPassword, Str
                 if (inboxFolder != nullptr) {
                     oClient->SelectFolder(inboxFolder);
                     array<MailInfo^>^ infos = oClient->GetMailInfos();
-                    AppendLog("Total {0} email(s)\r\n" + infos->Length);
+         
 
                     if (infos->Length > 0) {
                         for (int i = infos->Length - 1; i >= 0; i--) {
@@ -530,7 +532,7 @@ void LoginForm::Client::RunClient(String^ emailAddress, String^ appPassword, Str
                             String^ messageId = mailInfo->UIDL;
 
                             if (IsEmailProcessed(messageId, processedEmailsFile)) {
-                                AppendLog("Email already processed. Skipping...");
+                     
                                 continue;
                             }
 
@@ -538,7 +540,6 @@ void LoginForm::Client::RunClient(String^ emailAddress, String^ appPassword, Str
                             DateTime sentTime = oMail->ReceivedDate;
 
                             if (sentTime < startTime) {
-                                AppendLog("Found an email sent before application started. Stopping...");
                                 break;
                             }
 
@@ -606,8 +607,9 @@ void LoginForm::Client::RunClient(String^ emailAddress, String^ appPassword, Str
                                 SaveProcessedEmail(messageId, processedEmailsFile);
                             }
                             else {
-                                AppendLog("Email is not from the specified sender: {0}\r\n"+ oMail->From->ToString());
+                                SaveProcessedEmail(messageId, processedEmailsFile);
                             }
+                            
                         }
                     }
                     else {
@@ -619,7 +621,7 @@ void LoginForm::Client::RunClient(String^ emailAddress, String^ appPassword, Str
                 }
 
                 oClient->Quit();
-                AppendLog("Waiting for the next check...");
+
             }
             catch (Exception^ e) {
                 AppendLog("Error: {0}"+ e->Message);

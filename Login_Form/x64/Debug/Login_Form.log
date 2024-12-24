@@ -1,1 +1,3 @@
-﻿  Login_Form.vcxproj -> D:\Socket\Socket-project\Login_Form\x64\Debug\Project1.exe
+﻿  ServerForm.cpp
+  Bar.obj : MSIL module encountered; incremental linking is disabled for MSIL; performing full link
+  Login_Form.vcxproj -> D:\Socket\Socket-project\Login_Form\x64\Debug\Project1.exe
