@@ -120,28 +120,59 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Net" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Bar.cpp" />
+    <ClCompile Include="Client.cpp" />
+    <ClCompile Include="clientest.cpp" />
     <ClCompile Include="MyForm.cpp" />
+    <ClCompile Include="RegisterForm1.cpp" />
+    <ClCompile Include="SelectionForm.cpp" />
     <ClCompile Include="ServerForm.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Bar.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
+    <ClInclude Include="Client.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
     <ClInclude Include="MyForm.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
+    <ClInclude Include="RegisterForm1.h">
+      <FileType>CppForm</FileType>
+    </ClInclude>
+    <ClInclude Include="SelectionForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
     <ClInclude Include="ServerForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
+    <ClInclude Include="UserInfo.h" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Client.resx">
+      <DependentUpon>Client.h</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="MyForm.resx">
       <DependentUpon>MyForm.h</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RegisterForm1.resx">
+      <DependentUpon>RegisterForm1.h</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SelectionForm.resx">
+      <DependentUpon>SelectionForm.h</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ServerForm.resx">
       <DependentUpon>ServerForm.h</DependentUpon>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,4 +1,1 @@
-﻿  ServerForm.cpp
-D:\Socket\Socket-project\Login_Form\ServerForm.cpp(49,25): warning C4101: 'buffer': unreferenced local variable
-  MyForm.obj : MSIL module encountered; incremental linking is disabled for MSIL; performing full link
-  Login_Form.vcxproj -> D:\Socket\Socket-project\Login_Form\x64\Debug\Project1.exe
+﻿  Login_Form.vcxproj -> D:\Socket\Socket-project\Login_Form\x64\Debug\Project1.exe

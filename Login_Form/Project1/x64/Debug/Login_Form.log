@@ -1,0 +1,16 @@
+﻿  Bar.cpp
+  Client.cpp
+C:\Project\Socket-project\Login_Form\Client.cpp(85,43): warning C4566: character represented by universal-character-name '\u0110' cannot be represented in the current code page (1252)
+C:\Project\Socket-project\Login_Form\Client.cpp(85,43): warning C4566: character represented by universal-character-name '\u1ECB' cannot be represented in the current code page (1252)
+C:\Project\Socket-project\Login_Form\Client.cpp(85,43): warning C4566: character represented by universal-character-name '\u1EC9' cannot be represented in the current code page (1252)
+C:\Project\Socket-project\Login_Form\Client.cpp(85,43): warning C4566: character represented by universal-character-name '\u1EE3' cannot be represented in the current code page (1252)
+C:\Project\Socket-project\Login_Form\Client.cpp(85,43): warning C4566: character represented by universal-character-name '\u1EC7' cannot be represented in the current code page (1252)
+  clientest.cpp
+  MyForm.cpp
+  RegisterForm1.cpp
+  SelectionForm.cpp
+  ServerForm.cpp
+  .NETFramework,Version=v4.7.2.AssemblyAttributes.cpp
+  Generating Code...
+  Bar.obj : MSIL module encountered; incremental linking is disabled for MSIL; performing full link
+  Login_Form.vcxproj -> C:\Project\Socket-project\Login_Form\x64\Debug\Project1.exe
